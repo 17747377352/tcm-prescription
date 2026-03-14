@@ -1,245 +1,70 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
-
-// 症状输入
+import { ref } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { request } from '@/utils/request'
+const router = useRouter()
+const route = useRoute()
 const symptoms = ref('')
 const selectedSymptoms = ref<string[]>([])
-
-// 常见症状标签
-const commonSymptoms = [
-  '失眠', '头痛', '乏力', '心悸', '盗汗', '便秘', 
-  '食欲不振', '咳嗽', '腰酸', '健忘', '多梦', '头晕'
-]
-
-// 舌象选项
-const tongueOptions = [
-  { label: '淡红舌', value: 'pale_red' },
-  { label: '红舌', value: 'red' },
-  { label: '紫舌', value: 'purple' },
-  { label: '淡白舌', value: 'pale' }
-]
-
+const commonSymptoms = ['失眠', '头痛', '乏力', '心悸', '盗汗', '便秘', '食欲不振', '咳嗽', '腰酸', '健忘', '多梦', '头晕']
+const tongueOptions = ['淡红舌', '红舌', '紫舌', '淡白舌']
+const pulseOptions = ['平脉', '浮脉', '沉脉', '数脉', '迟脉', '弦脉']
 const tongueType = ref('')
 const pulseType = ref('')
-
-// 脉象选项
-const pulseOptions = [
-  { label: '平脉', value: 'normal' },
-  { label: '浮脉', value: 'floating' },
-  { label: '沉脉', value: 'deep' },
-  { label: '数脉', value: 'rapid' },
-  { label: '迟脉', value: 'slow' },
-  { label: '弦脉', value: 'wiry' }
-]
-
-// 添加症状标签
-const addSymptom = (symptom: string) => {
-  if (!selectedSymptoms.value.includes(symptom)) {
-    selectedSymptoms.value.push(symptom)
-  }
-}
-
-// 移除症状
-const removeSymptom = (index: number) => {
-  selectedSymptoms.value.splice(index, 1)
-}
-
-// 提交问诊
 const loading = ref(false)
-const submitDiagnosis = () => {
-  if (selectedSymptoms.value.length === 0) {
-    uni.showToast({ title: '请选择症状', icon: 'none' })
-    return
-  }
-  
+const navs = [
+  { text: '首页', path: '/home', icon: '🏠' },
+  { text: '问诊', path: '/diagnosis', icon: '🩺' },
+  { text: '抓配', path: '/prescribe', icon: '🌿' },
+  { text: '记录', path: '/history', icon: '📋' },
+  { text: '我的', path: '/profile', icon: '👤' }
+]
+const addSymptom = (symptom: string) => { if (!selectedSymptoms.value.includes(symptom)) selectedSymptoms.value.push(symptom) }
+const removeSymptom = (index: number) => selectedSymptoms.value.splice(index, 1)
+const buildSyndrome = () => {
+  const merged = [...selectedSymptoms.value, ...symptoms.value.split(/[，,、\s]+/).filter(Boolean)]
+  if (merged.some(x => ['失眠', '心悸', '健忘', '乏力', '多梦'].includes(x))) return { syndrome: '心脾两虚证', principle: '补益心脾，养血安神', formula: '归脾汤加减' }
+  if (merged.some(x => ['头痛', '口苦', '急躁'].includes(x))) return { syndrome: '肝火上炎证', principle: '清肝泻火', formula: '龙胆泻肝汤加减' }
+  return { syndrome: '气血两虚证', principle: '益气养血', formula: '八珍汤加减' }
+}
+const submitDiagnosis = async () => {
+  if (selectedSymptoms.value.length === 0 && !symptoms.value.trim()) return alert('请填写症状')
   loading.value = true
-  
-  // TODO: 调用 AI 辨证接口
-  setTimeout(() => {
-    loading.value = false
-    uni.showModal({
-      title: '辨证结果',
-      content: '根据您描述的症状，初步判断为：心脾两虚证\n\n建议方剂：归脾汤加减',
-      showCancel: false
-    })
-  }, 2000)
+  try {
+    const diagnosis = buildSyndrome()
+    await request({ url: '/prescription/save-demo', method: 'POST', data: { type: 'AI开方', composition: JSON.stringify({ syndrome: diagnosis.syndrome, principle: diagnosis.principle, formula: diagnosis.formula, symptoms: [...selectedSymptoms.value, symptoms.value].filter(Boolean), tongueType: tongueType.value, pulseType: pulseType.value }) } })
+    alert(`初步辨证：${diagnosis.syndrome}\n治则：${diagnosis.principle}\n推荐方剂：${diagnosis.formula}`)
+    router.push('/history')
+  } finally { loading.value = false }
 }
 </script>
 
 <template>
-  <view class="container">
-    <!-- 症状输入区 -->
-    <view class="section">
-      <view class="section-title">请描述您的主要症状</view>
-      
-      <!-- 已选症状 -->
-      <view class="selected-symptoms" v-if="selectedSymptoms.length > 0">
-        <view 
-          v-for="(item, index) in selectedSymptoms" 
-          :key="item"
-          class="symptom-tag active"
-          @click="removeSymptom(index)"
-        >
-          {{ item }} ✕
-        </view>
-      </view>
-      
-      <!-- 常见症状标签 -->
-      <view class="symptom-tags">
-        <view 
-          v-for="item in commonSymptoms" 
-          :key="item"
-          :class="['symptom-tag', selectedSymptoms.includes(item) ? 'selected' : '']"
-          @click="addSymptom(item)"
-        >
-          {{ item }}
-        </view>
-      </view>
-      
-      <!-- 自定义输入 -->
-      <textarea 
-        v-model="symptoms"
-        class="symptom-input"
-        placeholder="或输入其他症状描述..."
-      />
-    </view>
-    
-    <!-- 舌象脉象 -->
-    <view class="section">
-      <view class="section-title">舌象（可选）</view>
-      <view class="option-group">
-        <view 
-          v-for="item in tongueOptions" 
-          :key="item.value"
-          :class="['option-item', tongueType === item.value ? 'active' : '']"
-          @click="tongueType = item.value"
-        >
-          {{ item.label }}
-        </view>
-      </view>
-    </view>
-    
-    <view class="section">
-      <view class="section-title">脉象（可选）</view>
-      <view class="option-group">
-        <view 
-          v-for="item in pulseOptions" 
-          :key="item.value"
-          :class="['option-item', pulseType === item.value ? 'active' : '']"
-          @click="pulseType = item.value"
-        >
-          {{ item.label }}
-        </view>
-      </view>
-    </view>
-    
-    <!-- 提交按钮 -->
-    <view class="submit-area">
-      <button class="submit-btn" :loading="loading" @click="submitDiagnosis">
-        开始辨证
-      </button>
-    </view>
-  </view>
+  <div class="mobile-page">
+    <div class="card">
+      <div class="section-title">请描述您的主要症状</div>
+      <div class="chip-wrap" style="margin-bottom:12px" v-if="selectedSymptoms.length">
+        <span class="chip active" v-for="(item,index) in selectedSymptoms" :key="item" @click="removeSymptom(index)">{{ item }} ✕</span>
+      </div>
+      <div class="chip-wrap" style="margin-bottom:12px">
+        <span class="chip" :class="{active:selectedSymptoms.includes(item)}" v-for="item in commonSymptoms" :key="item" @click="addSymptom(item)">{{ item }}</span>
+      </div>
+      <textarea v-model="symptoms" class="textarea" placeholder="或输入其他症状描述..."></textarea>
+    </div>
+
+    <div class="card">
+      <div class="section-title">舌象（可选）</div>
+      <div class="chip-wrap"><span class="chip" :class="{active:tongueType===item}" v-for="item in tongueOptions" :key="item" @click="tongueType=item">{{ item }}</span></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">脉象（可选）</div>
+      <div class="chip-wrap"><span class="chip" :class="{active:pulseType===item}" v-for="item in pulseOptions" :key="item" @click="pulseType=item">{{ item }}</span></div>
+    </div>
+
+    <button class="btn btn-block" :disabled="loading" @click="submitDiagnosis">{{ loading ? '辨证中...' : '开始辨证' }}</button>
+    <nav class="bottom-nav">
+      <a v-for="item in navs" :key="item.path" href="javascript:;" :class="{ active: route.path === item.path }" @click="router.push(item.path)"><span>{{ item.icon }}</span><span>{{ item.text }}</span></a>
+    </nav>
+  </div>
 </template>
-
-<style lang="scss" scoped>
-.container {
-  min-height: 100vh;
-  background: #f5f5f5;
-  padding: 20rpx;
-  padding-bottom: 120rpx;
-}
-
-.section {
-  background: #fff;
-  border-radius: 16rpx;
-  padding: 30rpx;
-  margin-bottom: 20rpx;
-  
-  .section-title {
-    font-size: 32rpx;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 20rpx;
-  }
-}
-
-.symptom-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16rpx;
-  margin-bottom: 20rpx;
-  
-  .symptom-tag {
-    padding: 16rpx 28rpx;
-    background: #f5f5f5;
-    border-radius: 30rpx;
-    font-size: 28rpx;
-    color: #666;
-    
-    &.selected {
-      background: #67C23A;
-      color: #fff;
-    }
-  }
-}
-
-.selected-symptoms {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12rpx;
-  margin-bottom: 20rpx;
-  
-  .symptom-tag.active {
-    padding: 12rpx 20rpx;
-    background: #e8f5e9;
-    border-radius: 30rpx;
-    font-size: 26rpx;
-    color: #67C23A;
-    border: 1rpx solid #67C23A;
-  }
-}
-
-.symptom-input {
-  width: 100%;
-  height: 160rpx;
-  padding: 20rpx;
-  background: #f9f9f9;
-  border-radius: 12rpx;
-  font-size: 28rpx;
-}
-
-.option-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16rpx;
-  
-  .option-item {
-    padding: 16rpx 32rpx;
-    background: #f5f5f5;
-    border-radius: 30rpx;
-    font-size: 28rpx;
-    color: #666;
-    
-    &.active {
-      background: #67C23A;
-      color: #fff;
-    }
-  }
-}
-
-.submit-area {
-  margin-top: 40rpx;
-  
-  .submit-btn {
-    width: 100%;
-    height: 90rpx;
-    background: linear-gradient(135deg, #67C23A, #85ce61);
-    color: #fff;
-    font-size: 32rpx;
-    font-weight: bold;
-    border-radius: 45rpx;
-    border: none;
-  }
-}
-</style>
