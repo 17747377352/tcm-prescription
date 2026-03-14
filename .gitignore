@@ -4,3 +4,8 @@ target/
 *.log
 .DS_Store
 application-local.yml
+node_modules/
+frontend/*/node_modules/
+frontend/*/dist/
+app.log
+app-dev.log

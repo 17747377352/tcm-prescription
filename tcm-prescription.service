@@ -1,0 +1,16 @@
+[Unit]
+Description=TCM Prescription Spring Boot Service
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/projects/tcm-prescription
+ExecStart=/usr/bin/mvn spring-boot:run
+Restart=always
+RestartSec=10
+Environment=JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+Environment=PATH=/usr/lib/jvm/java-21-openjdk-amd64/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+[Install]
+WantedBy=multi-user.target
