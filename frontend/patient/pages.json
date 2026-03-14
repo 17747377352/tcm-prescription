@@ -1,0 +1,88 @@
+{
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "中药抓配",
+        "navigationBarBackgroundColor": "#67C23A",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/diagnosis/index",
+      "style": {
+        "navigationBarTitleText": "智能问诊",
+        "navigationBarBackgroundColor": "#67C23A",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/prescribe/index",
+      "style": {
+        "navigationBarTitleText": "手动抓配",
+        "navigationBarBackgroundColor": "#67C23A",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/history/index",
+      "style": {
+        "navigationBarTitleText": "处方记录",
+        "navigationBarBackgroundColor": "#67C23A",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/profile/index",
+      "style": {
+        "navigationBarTitleText": "我的",
+        "navigationBarBackgroundColor": "#67C23A",
+        "navigationBarTextStyle": "white"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "中药抓配",
+    "navigationBarBackgroundColor": "#67C23A",
+    "backgroundColor": "#f5f5f5"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#67C23A",
+    "borderStyle": "black",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "static/tab/home.png",
+        "selectedIconPath": "static/tab/home-active.png"
+      },
+      {
+        "pagePath": "pages/diagnosis/index",
+        "text": "问诊",
+        "iconPath": "static/tab/diagnosis.png",
+        "selectedIconPath": "static/tab/diagnosis-active.png"
+      },
+      {
+        "pagePath": "pages/prescribe/index",
+        "text": "抓配",
+        "iconPath": "static/tab/prescribe.png",
+        "selectedIconPath": "static/tab/prescribe-active.png"
+      },
+      {
+        "pagePath": "pages/history/index",
+        "text": "记录",
+        "iconPath": "static/tab/history.png",
+        "selectedIconPath": "static/tab/history-active.png"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的",
+        "iconPath": "static/tab/profile.png",
+        "selectedIconPath": "static/tab/profile-active.png"
+      }
+    ]
+  }
+}
